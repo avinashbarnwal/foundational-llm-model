@@ -1,0 +1,43 @@
+# Default configuration for the recommendation foundation model.
+# Sizes are small so the pipeline runs on a laptop; scale d_model / n_layers up for real training.
+
+data:
+  max_seq_len: 256            # tokens per training window
+  sliding_window_stride: 128  # stride when sampling windows from long histories
+  merge_gap_seconds: 1800     # adjacent actions on the same title within this gap are merged into one token
+  min_watch_seconds: 60       # shorter plays are treated as low-signal and masked as targets
+
+vocab:
+  num_items: 10000
+  num_action_types: 8         # play, trailer, thumbs-up, add-to-list, ...
+  num_devices: 6
+  num_locales: 32
+  num_genres: 64
+  num_languages: 40
+  num_metadata_tags: 512      # bag of metadata tags per title (genre, cast, maturity, ...)
+
+model:
+  d_model: 128
+  n_layers: 4
+  n_heads: 4
+  dropout: 0.1
+  attention_window: 64        # local (sliding-window) attention span
+  global_tokens: 4            # first N tokens every position may attend to (sparse attention)
+  max_item_age_days: 365      # cap for the age feature that gates ID vs metadata embeddings
+
+objective:
+  multi_token_horizon: 3      # predict the next K items, not just the next one
+  aux_weights:
+    action_type: 0.2
+    genre: 0.2
+    language: 0.1
+  weight_by_watch_time: true  # longer engagement contributes more to the loss
+
+training:
+  batch_size: 32
+  lr: 3.0e-4
+  weight_decay: 0.01
+  epochs: 2
+  grad_clip: 1.0
+  device: cpu
+  seed: 7
