@@ -1,10 +1,60 @@
 # foundational-llm-model
 
-A curated tracker of **foundation models**, starting with **time-series forecasting**. These are large models pretrained on many datasets that can forecast new series zero-shot, without task-specific training.
+Hands-on implementations and notes on **foundation models**: AI agent papers in code, a Netflix-style recommendation foundation model, and a tracker of time-series foundation models.
 
 _Last updated: November 2026_
 
-## Contents
+## Projects
+
+| Folder | What it is | Highlights |
+|---|---|---|
+| [`ai-agents/`](ai-agents/) | **10 foundational AI agent papers, in code** | Chain-of-Thought, MRKL, ReAct, Toolformer, Reflexion, Self-Refine, Generative Agents, Tree of Thoughts, Voyager and AutoGen, each as a small runnable demo. Runs offline with scripted replies, or live with Claude via `--live`. |
+| [`netflix/`](netflix/) | **Netflix-style recommendation foundation model** (PyTorch) | Reference implementation of the Netflix Tech Blog's foundation model for personalized recommendation: interaction tokenization, sparse attention with a KV cache, multi-token prediction, cold-start embeddings, incremental training and downstream fine-tuning. Includes tests and a [blog write-up](netflix/blog/medium-article.md). |
+| [Time-series foundation models](#time-series-foundation-models) | **Tracker** (this README) | Comparison of recent forecasting models (TimeH2O-v1, Yug-1, Timestral, TimesFM-3, IBM Granite, Timer-S1, Chronos-2), reported benchmarks and a selection guide. |
+
+### Repository layout
+
+```
+foundational-llm-model/
+├── ai-agents/            # 01_chain_of_thought.py … 10_autogen.py, common.py (scripted / live LLM)
+├── netflix/
+│   ├── configs/          # default.yaml hyper-parameters
+│   ├── scripts/train.py  # end-to-end training on synthetic data
+│   ├── src/netflix_fm/   # data, model, training, inference, downstream
+│   ├── tests/            # pytest suite
+│   └── blog/             # Medium article + architecture diagram
+└── README.md             # this file
+```
+
+### Quick start
+
+**AI agents**: no API key needed in the default offline mode.
+
+```bash
+cd ai-agents
+python3 03_react.py          # offline: scripted LLM replies
+python3 03_react.py --live   # real model (needs: pip install anthropic, ANTHROPIC_API_KEY)
+```
+
+> In live mode, Reflexion, Voyager and AutoGen execute model-written code on your machine. They are teaching demos, not sandboxes.
+
+**Netflix recommendation model**: trains on synthetic data.
+
+```bash
+cd netflix
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+.venv/bin/python -m pytest -q
+.venv/bin/python scripts/train.py --config configs/default.yaml --out checkpoints/fm.pt
+```
+
+See each folder's README for details.
+
+---
+
+## Time-series foundation models
+
+Large models pretrained on many datasets that can forecast new series zero-shot, without task-specific training.
 
 - [At a glance](#at-a-glance)
 - [Model notes](#model-notes)
@@ -13,9 +63,8 @@ _Last updated: November 2026_
 - [Evaluating on your own data](#evaluating-on-your-own-data)
 - [Glossary](#glossary)
 - [References](#references)
-- [Contributing](#contributing)
 
-## At a glance
+### At a glance
 
 Newest first. "—" means not confirmed from the sources below.
 
@@ -33,7 +82,7 @@ Other common baselines: **Moirai** (Salesforce), **Toto** (Datadog), **TiRex** (
 
 > ⚠️ Licenses vary widely. Several new releases are **non-commercial**. Check each model card before production use.
 
-## Model notes
+### Model notes
 
 - **TimeH2O-v1 (H2O.ai):** Probabilistic forecasts at 9 quantiles (0.1–0.9), an unlimited horizon and optional covariates. H2O.ai reports top scores on GIFT-Eval and fev-bench.
 - **Yug-1 (Birla AI Labs):** India-built model aimed at retail demand, finance, equipment monitoring and energy. Supports univariate and covariate-informed forecasting (e.g. promotions, holidays). Available on Hugging Face and GitHub.
@@ -43,7 +92,7 @@ Other common baselines: **Moirai** (Salesforce), **Toto** (Datadog), **TiRex** (
 - **Timer-S1:** A research model of about 1B parameters that studies scaling for time-series models.
 - **Chronos-2 (Amazon):** Moves from univariate to "universal" forecasting with multivariate and covariate support. A strong, widely used baseline.
 
-## Reported benchmarks
+### Reported benchmarks
 
 All figures are **developer-reported** and not independently reproduced. Lower is better.
 
@@ -58,7 +107,7 @@ All figures are **developer-reported** and not independently reproduced. Lower i
 
 TimeH2O-v1 also reports fev-bench skill scores (higher is better) of **50.83** for quantile loss and **39.95** for MASE.
 
-## Choosing a model
+### Choosing a model
 
 | If you need… | Start with |
 |---|---|
@@ -69,7 +118,7 @@ TimeH2O-v1 also reports fev-bench skill scores (higher is better) of **50.83** f
 | CPU or edge deployment | Timestral (small sizes), IBM Granite |
 | Uncertainty / prediction intervals | Quantile-output models such as TimeH2O-v1 |
 
-## Evaluating on your own data
+### Evaluating on your own data
 
 Public leaderboards rarely match your domain, so run a quick backtest before you commit to a model:
 
@@ -79,7 +128,7 @@ Public leaderboards rarely match your domain, so run a quick backtest before you
 4. **Segment the results:** check performance by series type (intermittent, trending, seasonal), not just the overall average.
 5. **Cost and latency:** measure inference time on your target hardware.
 
-## Glossary
+### Glossary
 
 - **Zero-shot:** forecasting a series the model never saw in training, with no fine-tuning.
 - **Covariates:** extra input variables (known future or past) that inform the forecast.
@@ -87,7 +136,7 @@ Public leaderboards rarely match your domain, so run a quick backtest before you
 - **CRPS:** Continuous Ranked Probability Score. Measures the quality of a whole probabilistic forecast.
 - **GIFT-Eval / fev-bench:** public benchmark suites for time-series foundation models.
 
-## References
+### References
 
 - [TimeH2O-v1 – Hugging Face](https://huggingface.co/h2oai/timeh2o-v1)
 - [TimeH2O launch – BusinessWire](https://www.financialcontent.com/article/bizwire-2026-10-26-h2oais-timeh2o-beats-mistral-google-and-amazon-in-time-series-forecasting)
@@ -99,6 +148,8 @@ Public leaderboards rarely match your domain, so run a quick backtest before you
 - [Chronos-2 – arXiv 2510.15821](https://arxiv.org/abs/2510.15821)
 - [Licensing comparison – beri.net](https://www.beri.net/article/timesfm-vs-chronos-vs-moirai-time-series-foundation-model-licence-bigquery-sagemaker-cost-2026)
 
+---
+
 ## Contributing
 
-Spotted a new release or a correction? Open an issue or a PR with the model name, release date, a link to the model card or paper, and the license.
+Spotted a new model release, a bug or a correction? Open an issue or a PR. For the tracker, include the model name, release date, a link to the model card or paper, and the license.
